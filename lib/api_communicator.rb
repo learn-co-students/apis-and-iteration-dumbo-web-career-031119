@@ -37,7 +37,9 @@ movie_array = ""
 def print_movies(films)
 
    pull_movie_titles = films.map do |hash|
-    hash["title"]
+
+      "👾 " + hash["title"]
+
 
 #puts movie_titles
   # some iteration magic and puts out the movies in a nice list
