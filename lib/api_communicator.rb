@@ -3,10 +3,35 @@ require 'json'
 require 'pry'
 
 def get_character_movies_from_api(character_name)
-  #make the web request
-  response_string = RestClient.get('http://www.swapi.co/api/people/')
-  response_hash = JSON.parse(response_string)
+  movies_hash_arr = []
+  count = 1
 
+  loop do
+    #make the web request
+    response_string = RestClient.get("http://www.swapi.co/api/people/?page=#{count}")
+    response_hash = JSON.parse(response_string)
+
+    movie_hash = response_hash["results"].find do |char|
+      char["name"].downcase == character_name
+    end
+
+    # There should only be one character with the same name (hopefully)
+    if movie_hash != nil
+      movies_arr = movie_hash["films"]
+
+      # Now making web requests from the movie urls
+      # Can make another helper method here
+      #########################################
+      movies_hash_arr = movies_arr.map do |film|
+        film_response = RestClient.get(film)
+        film_hash = JSON.parse(film_response)
+      end
+      #########################################
+    end
+
+    count += 1
+    break if response_hash["next"] == nil
+  end
   # iterate over the response hash to find the collection of `films` for the given
   #   `character`
   # collect those film API urls, make a web request to each URL to get the info
@@ -16,26 +41,6 @@ def get_character_movies_from_api(character_name)
   # this collection will be the argument given to `print_movies`
   #  and that method will do some nice presentation stuff like puts out a list
   #  of movies by title. Have a play around with the puts with other info about a given film.
-  movies_arr = response_hash["results"].select do |char|
-    char["name"].downcase == character_name
-    # value.each do |info|
-    #   # if info["name"].downcase == character_name
-    #   #   movies_arr.concat(info["films"])
-    #   # end
-    # end
-  end
-
-  # There should only be one character with the same name (hopefully)
-  movies_arr = movies_arr[0]["films"]
-
-  # Now making web requests from the movie urls
-  # Can make another helper method here
-  #########################################
-  movies_hash_arr = movies_arr.map do |film|
-    film_response = RestClient.get(film)
-    film_hash = JSON.parse(film_response)
-  end
-  #########################################
   movies_hash_arr
 end
 
